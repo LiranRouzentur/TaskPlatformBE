@@ -1,28 +1,85 @@
-# Angular specific
-/dist/
-/out-tsc/
-/tmp/
-/coverage/
-/e2e/test-output/
-/.angular/
-.angular/
+# Build results
+bin/
+obj/
+out/
 
-# Node modules and dependency files
-/node_modules/
-/package-lock.json
-/yarn.lock
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
 
-# Environment files
-/.env
+# VS Code settings
+.vscode/
 
-# Angular CLI and build artefacts
-/.angular-cli.json
-/.ng/
+# Rider settings
+.idea/
 
-# TypeScript cache
-*.tsbuildinfo
+# Build logs
+*.log
+
+# Auto-generated files
+Generated_Code/
+*.g.cs
+*.g.i.cs
+*.AssemblyInfo.cs
+
+# Publish outputs
+publish/
+*.pubxml
+*.publishproj
+
+# dotnet CLI
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET stuff
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# Entity Framework
+Migrations/
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Testing
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Others
+*.dbmdl
+*.pdb
+*.cache
+*.mdb
+*.pidb
+*.svclog
+*.scc
+*.nupkg
+*.snupkg
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+*.nuspec
+
+# Temporary files
+~$*
+*.tmp
+*.bak
 
 # Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
