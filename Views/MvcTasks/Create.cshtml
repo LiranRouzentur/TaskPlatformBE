@@ -1,0 +1,49 @@
+@model NewTaskRequest
+@{
+    ViewData["Title"] = "Create New Task";
+}
+
+<div class="new-task-form">
+    <h3>Create New Task</h3>
+    <form asp-action="Create" method="post">
+        <div class="form-group">
+            <label for="taskType">Task Type:</label>
+            <select 
+                id="taskType" 
+                name="TypeId" 
+                asp-for="TypeId"
+                required>
+                <option value="">Select Task Type</option>
+                @foreach (var type in ViewBag.TaskTypes)
+                {
+                    <option value="@type.TypeId">@type.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="user">Assigned User:</label>
+            <select 
+                id="user" 
+                name="UserId" 
+                asp-for="UserId"
+                required>
+                <option value="">Select User</option>
+                @foreach (var user in ViewBag.Users)
+                {
+                    <option value="@user.Id">@user.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="button-container">
+            <button type="submit">
+                Create Task
+            </button>
+        </div>
+    </form>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div> 

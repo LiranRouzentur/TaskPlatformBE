@@ -1,0 +1,235 @@
+@model TaskPlatformBE.Models.TasksViewModel
+@{
+    ViewData["Title"] = "Task Management Platform - MVC";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/task-management.css" />
+}
+
+<div class="home-container">
+    @Html.AntiForgeryToken()
+    
+    <header class="page-header">
+        <h1>Task Management Platform - MVC</h1>
+        <div class="view-toggle">
+            <a href="http://localhost:4200" class="toggle-btn">ANGULAR VERSION</a>
+        </div>
+    </header>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        @TempData["SuccessMessage"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        @TempData["ErrorMessage"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <main class="main-content">
+        <!-- New Task Form -->
+        <div class="new-task-form">
+            <div class="form-header">
+                <h3>Create New Task</h3>
+                <button type="button" class="btn btn-primary" id="createTaskBtn" onclick="createTask()">
+                    Create Task
+                </button>
+            </div>
+            <div class="form-content">
+                <div class="form-group">
+                    <label for="taskType">Task Type:</label>
+                    <select id="taskType" class="form-control" required>
+                        <option value="">Select Task Type</option>
+                        @foreach (var type in Model.TaskTypes)
+                        {
+                            <option value="@type.TypeId">@type.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="user">Assigned User:</label>
+                    <select id="user" class="form-control" required>
+                        <option value="">Select User</option>
+                        @foreach (var user in Model.Users)
+                        {
+                            <option value="@user.Id">@user.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Table -->
+        <div class="task-table-container">
+            <div class="table-header">
+                <h3>Task List</h3>
+                <div class="filter-controls">
+                    <label for="userFilter">Filter by User:</label>
+                    <select id="userFilter" class="form-control" onchange="filterTasks()">
+                        <option value="">All Users</option>
+                        @foreach (var user in Model.Users)
+                        {
+                            @if (Model.SelectedUserId == user.Id)
+                            {
+                                <option value="@user.Id" selected>@user.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@user.Id">@user.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+            @if (Model.Tasks.Any())
+            {
+                <table class="task-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>TASK</th>
+                            <th>USERS</th>
+                            <th>Requirement</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var task in Model.Tasks)
+                        {
+                            <tr class="@(task.Status == 0 ? "closed" : "")" data-task-id="@task.Id">
+                                <td>@task.Id</td>
+                                <td>
+                                    <div class="task-info">
+                                        <div class="task-type">
+                                            <strong>Type:</strong> 
+                                            @(task.TaskType?.Name ?? $"Type {task.TypeId}")
+                                        </div>
+                                        <div class="task-status">
+                                            <strong>Status:</strong> 
+                                            @if (task.Status == 0)
+                                            {
+                                                <span>Completed</span>
+                                            }
+                                            else
+                                            {
+                                                var taskType = Model.TaskTypes.FirstOrDefault(t => t.TypeId == task.TypeId);
+                                                var currentStatus = taskType?.Statuses.FirstOrDefault(s => s.StatusId == task.Status);
+                                                var totalStages = taskType?.Statuses.Count ?? 0;
+                                                <span>@(currentStatus?.Name ?? $"Status {task.Status}") (@task.Status/@totalStages)</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="users-info">
+                                        <div class="assigned-user">
+                                            <strong>Assigned:</strong> 
+                                            @(task.User?.Name ?? $"User {task.UserId}")
+                                        </div>
+                                        <div class="next-user">
+                                            <strong>Next:</strong> 
+                                            @(task.NextAssignedUser?.Name ?? $"User {task.NextAssignedUserId}")
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (task.Status != 0)
+                                    {
+                                        var taskType = Model.TaskTypes.FirstOrDefault(t => t.TypeId == task.TypeId);
+                                        var nextStatus = taskType?.Statuses.FirstOrDefault(s => s.StatusId == task.Status + 1);
+                                        
+                                        @if (nextStatus?.Requirement != null)
+                                        {
+                                            <div class="requirement-section">
+                                                <div class="requirement-title">
+                                                    <strong>@(nextStatus.RequirementDescription ?? nextStatus.Requirement)</strong>
+                                                </div>
+                                                <div class="requirement-input">
+                                                    @{
+                                                        var reversedTaskId = ViewData["ReversedTaskId"]?.ToString();
+                                                        var reversedRequirement = ViewData["ReversedRequirement"]?.ToString();
+                                                        var isReversedTask = reversedTaskId == task.Id.ToString();
+                                                    }
+                                                    <textarea 
+                                                        name="requirement_@task.Id"
+                                                        placeholder="Enter your input here..."
+                                                        class="requirement-field"
+                                                        rows="3">@(isReversedTask ? reversedRequirement : "")</textarea>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (nextStatus?.IsFinal == true)
+                                        {
+                                            <span class="no-requirement">Ready to close</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="no-requirement">No requirement needed</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="no-requirement">Task closed</span>
+                                    }
+                                </td>
+                                <td class="actions">
+                                    <div class="action-buttons">
+                                        @if (task.Status != 0)
+                                        {
+                                            var taskType = Model.TaskTypes.FirstOrDefault(t => t.TypeId == task.TypeId);
+                                            var currentStatus = taskType?.Statuses.FirstOrDefault(s => s.StatusId == task.Status);
+                                            var nextStatus = taskType?.Statuses.FirstOrDefault(s => s.StatusId == task.Status + 1);
+                                            
+                                            @if (currentStatus?.IsFinal == true)
+                                            {
+                                                <button type="button" class="btn btn-success btn-sm" onclick="closeTask(@task.Id)">Close</button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-primary btn-sm" onclick="advanceTask(@task.Id)">Advance</button>
+                                            }
+                                            
+                                            @if (task.Status > 1)
+                                            {
+                                                <button type="button" class="btn btn-warning btn-sm" onclick="reverseTask(@task.Id)">Reverse</button>
+                                            }
+                                        }
+                                        
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteTask(@task.Id)">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="no-tasks">
+                    <p>No tasks available. Create a new task to get started.</p>
+                </div>
+            }
+        </div>
+    </main>
+</div>
+
+<script src="~/js/task-management.js?v=@DateTime.Now.Ticks"></script> 
